@@ -5,25 +5,34 @@ var gulp    = require('gulp'),
     rename  = require('gulp-rename'),
     uglify  = require('gulp-uglify'),
     autoprefixer = require('gulp-autoprefixer'),
+    sourcemaps = require('gulp-sourcemaps'),
+    changed = require('gulp-changed'),
+    cached = require('gulp-cached'),
     ejs = require("gulp-ejs");
 
+
+var htmlbeautify = require("gulp-html-beautify");
 var path = require('path');
-var fs = require('fs')
+var fs = require('fs');
 
 
 // Input Directory
 var srcPath = {
-  'ejs': ['src/**/*.ejs', '!' + 'src/**/_*.ejs'],
+  'ejs': ['src/ejs/**/*.ejs', '!' + 'src/ejs/**/_*.ejs'],
   'css': 'src/**/*.css',
-  'sass': 'src/**/*.scss',
-  'js': 'src/**/*.js',
+  'sass': 'src/sass/*.scss',
+  'js': 'src/js/*.js',
   'json': 'src/_data/',
 };
 
 // Output Directory
 var destPath = {
   'root': './dist',
-  'html': './dist'
+  'html': './dist',
+  'ejs': './dist',
+  'css': './dist/assets/css',
+  'sass': './dist/assets/scss',
+  'js': './dist/assets/js',
 };
 
 
@@ -35,80 +44,100 @@ function reload(done) {
   done();
 }
 
-
-function ejs(done) {
-  return gulp
-    //.src(["src/ejs/**/*.ejs"])
-    .src([srcPath.ejs])
-    .pipe(plumber({errorHandler: notify.onError('Error: <%= error.message %>')}))
-    .pipe(ejs())
-    .pipe(rename({ extname: '.html' }))
-    .pipe(gulp.dest(destPath.html));
-}
-
-
 function html() {
   return (
-    gulp.src(destPath + '/*.html')
-    .pipe(plumber({errorHandler: notify.onError("Error: <%= error.message %>")}))
+    gulp.src('./dest/*.html')
+    .pipe(plumber())
     .pipe(connect.reload())
   );
 }
 
-// sass => css Compile
-function sass() {
+function styles() {
   return (
-    gulp.src(srcPath.sass + 'styles.scss')
-    .pipe(plumber({errorHandler: notify.onError("Error: <%= error.message %>")}))
+    gulp.src(srcPath.sass)
+    .pipe(sourcemaps.init())
+    .pipe(cached('sass'))
+    .pipe(plumber())
     .pipe(sass())
     .pipe(autoprefixer({
       overrideBrowserslist: ['last 3 versions'],
       cascade: false
     }))
     .pipe(sass({outputStyle: 'expanded'}))
-    .pipe(gulp.dest(destPath + 'assets/css'))
-    .pipe(sass({outputStyle: 'compressed'}))
-    .pipe(rename('styles.min.css'))
-    .pipe(gulp.dest(destPath + 'assets/css'))
+    .pipe(sourcemaps.write('./'))
+    .pipe(gulp.dest(destPath.css))
+    // .pipe(sass({outputStyle: 'compressed'}))
+    // .pipe(rename('styles.min.css'))
+    // .pipe(sourcemaps.write('./'))
+    // .pipe(gulp.dest(destPath.css))
     .pipe(connect.reload())
   );
 }
 
-// js Compile
-function js() {
+function scripts() {
   return (
-    gulp.src(srcPath.js + 'scripts.js')
-    .pipe(plumber({errorHandler: notify.onError("Error: <%= error.message %>")}))
-    .pipe(gulp.dest('./dist/assets/js'))
-    .pipe(uglify())
-    .pipe(rename('scripts.min.js'))
-    .pipe(gulp.dest('./dist/assets/js'))
-    .pipe(connect.reload())
+    gulp.src(srcPath.js)
+      .pipe(cached('scripts'))
+      .pipe(plumber())
+      .pipe(gulp.dest(destPath.js))
+      .pipe(uglify())
+      .pipe(rename({extname: '.min.js'}))
+      .pipe(gulp.dest(destPath.js))
+      .pipe(connect.reload())
   );
 }
 
+gulp.task('ejs', function(done) {
+  return gulp.src(srcPath.ejs)
+    // .pipe(cached('ejs'))
+    .pipe(changed('ejs'))
+    .pipe(plumber())
+    .pipe(ejs({title: 'gulp-ejs'}))
+    .pipe(
+      htmlbeautify({
+        indent_size: 2, //インデントサイズ
+        indent_char: " ", // インデントに使う文字列はスペース1こ
+        max_preserve_newlines: 0, // 許容する連続改行数
+        preserve_newlines: false, //コンパイル前のコードの改行
+        indent_inner_html: false, //head,bodyをインデント
+        extra_liners: [], // 終了タグの前に改行を入れるタグ。配列で指定。head,body,htmlにはデフォで改行を入れたくない場合は[]。
+      })
+    )
+    .pipe(rename({ extname: '.html' }))
+    .pipe(gulp.dest(destPath.ejs));
+  done();
+});
 
-// gulp.watch(file, func)
-function watchTask() {
-  gulp.watch('*.html', html);
-  gulp.watch(srcPath.sass + '/**/*.scss', sass);
-  gulp.watch('src/js/scripts.js', js);
-//  gulp.watch('src/pug/pages/**/*.pug', views);
+
+// function ejs() { 
+//   return gulp.src(srcPath.ejs)
+//     .pipe(ejs({ title: 'gulp-ejs' }))
+//     .pipe(rename({ extname: '.html' }))
+//     .pipe(gulp.dest(destPath.ejs));
+// }
+
+
+// gulp.watch(ファイル, 処理)
+function watchTask(done) {
+  // gulp.watch('*.html', html);
+  gulp.watch('src/sass/**/*.scss', styles);
+  gulp.watch('src/js/**/*.js', scripts);
+  gulp.watch(srcPath.ejs, gulp.task("ejs"));
+  
+  // gulp.watch(srcPath.ejs, ejs);
+  done();
 }
 
-watchTask();
 
-const watch = gulp.parallel(watchTask, reload);
-//const build = gulp.series(gulp.parallel(sass, js, html, views));
-const build = gulp.series(gulp.parallel(sass, js, html));
+
+var watch = gulp.parallel(watchTask, reload);
+var build = gulp.series(gulp.parallel(styles, scripts, gulp.task("ejs")));
 
 exports.reload = reload;
-exports.ejs = ejs;
+// exports.ejs = ejs;
+exports.styles = styles;
+exports.scripts = scripts;
 exports.html = html;
-exports.sass= sass;
-exports.js = js;
-//exports.views = views;
-
 exports.watch = watch;
 exports.build = build;
 exports.default = watch;
