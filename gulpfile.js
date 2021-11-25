@@ -8,7 +8,7 @@ var gulp    = require('gulp'),
     sourcemaps = require('gulp-sourcemaps'),
     changed = require('gulp-changed'),
     cached = require('gulp-cached'),
-    ejs = require("gulp-ejs");
+    gulpejs = require("gulp-ejs");
 
 
 var htmlbeautify = require("gulp-html-beautify");
@@ -87,17 +87,38 @@ function scripts() {
   );
 }
 
-gulp.task('ejs', function(done) {
+// gulp.task('ejs', function(done) {
+//   return gulp.src(srcPath.ejs)
+//     // .pipe(cached('ejs'))
+//     .pipe(changed('ejs'))
+//     .pipe(plumber())
+//     .pipe(ejs({title: 'gulp-ejs'}))
+//     .pipe(
+//       htmlbeautify({
+//         indent_size: 2, //インデントサイズ
+//         indent_char: " ", // インデントに使う文字列はスペース1こ
+//         max_preserve_newlines: 0, // 許容する連続改行数
+//         preserve_newlines: false, //コンパイル前のコードの改行
+//         indent_inner_html: false, //head,bodyをインデント
+//         extra_liners: [], // 終了タグの前に改行を入れるタグ。配列で指定。head,body,htmlにはデフォで改行を入れたくない場合は[]。
+//       })
+//     )
+//     .pipe(rename({ extname: '.html' }))
+//     .pipe(gulp.dest(destPath.ejs));
+//   done();
+// });
+
+
+function ejs() { 
   return gulp.src(srcPath.ejs)
-    // .pipe(cached('ejs'))
     .pipe(changed('ejs'))
     .pipe(plumber())
-    .pipe(ejs({title: 'gulp-ejs'}))
+    .pipe(gulpejs({ title: 'gulp-ejs' }))
     .pipe(
       htmlbeautify({
-        indent_size: 2, //インデントサイズ
-        indent_char: " ", // インデントに使う文字列はスペース1こ
-        max_preserve_newlines: 0, // 許容する連続改行数
+        indent_size: 2, 
+        indent_char: " ", 
+        max_preserve_newlines: 0, 
         preserve_newlines: false, //コンパイル前のコードの改行
         indent_inner_html: false, //head,bodyをインデント
         extra_liners: [], // 終了タグの前に改行を入れるタグ。配列で指定。head,body,htmlにはデフォで改行を入れたくない場合は[]。
@@ -105,11 +126,9 @@ gulp.task('ejs', function(done) {
     )
     .pipe(rename({ extname: '.html' }))
     .pipe(gulp.dest(destPath.ejs));
-  done();
-});
+}
 
-
-// function ejs() { 
+// function compileEjs() { 
 //   return gulp.src(srcPath.ejs)
 //     .pipe(ejs({ title: 'gulp-ejs' }))
 //     .pipe(rename({ extname: '.html' }))
@@ -122,19 +141,21 @@ function watchTask(done) {
   // gulp.watch('*.html', html);
   gulp.watch('src/sass/**/*.scss', styles);
   gulp.watch('src/js/**/*.js', scripts);
-  gulp.watch(srcPath.ejs, gulp.task("ejs"));
+  gulp.watch(srcPath.ejs, ejs);
+  // gulp.watch(srcPath.ejs, gulp.task("ejs"));
   
-  // gulp.watch(srcPath.ejs, ejs);
   done();
 }
 
 
-
 var watch = gulp.parallel(watchTask, reload);
-var build = gulp.series(gulp.parallel(styles, scripts, gulp.task("ejs")));
+// var build = gulp.series(gulp.parallel(styles, scripts, gulp.task("ejs")));
+// var build = gulp.series(gulp.parallel(styles, scripts, compileEjs));
+var build = gulp.series(gulp.parallel(styles, scripts, ejs));
 
 exports.reload = reload;
-// exports.ejs = ejs;
+// exports.compile = compileEjs;
+exports.ejs = ejs;
 exports.styles = styles;
 exports.scripts = scripts;
 exports.html = html;
