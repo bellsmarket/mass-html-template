@@ -1,0 +1,30 @@
+@mixin breakpoint($breakpoint) {
+  // PC/SP
+  @media screen and (min-width: $breakpoint) {
+    background: yellow;
+  }
+  @media screen and (max-width: $breakpoint - 1) {
+    background: red;
+  }
+}
+
+
+@mixin sp-tablet-pc($sp, $tablet, $pc) {
+  // 以下の@media以外の全サイズ
+  background: purple;
+
+  @media screen and (min-width: $sp) {
+    // 480px ~
+    background: red;
+  }
+
+  @media screen and (min-width:$tablet) and (max-width: $pc) {
+    // 768px ~ 1024px　*/
+    background: yellow;
+  }
+
+  @media screen and (min-width: $pc) {
+    //  ~1200px　*/
+    background: green;
+  }
+}

@@ -1,0 +1,19 @@
+  <header>
+    <% if (pageID === 'home'){ %>
+    <h1><%= jsonData.pages[pageID].description %></h1>
+    <% } else { %>
+      <p><a href="/"><%= jsonData.pages[pageID].description  %></a></p>
+    <% } %>
+  </header>
+  c
+  <nav>
+   <ul>
+     <% for(let page in jsonData.pages){ %>
+       <% if (page === pageID) { %>
+         <li class="current"><%= jsonData.pages[page].name %></li>
+       <% } else { %>
+         <li><a href="/<%= page %>/"><%= jsonData.pages[page].name %></a></li>
+       <% } %>
+     <% }; %>
+   </ul>
+ </nav>

@@ -1,0 +1,19 @@
+@charset "utf-8";
+
+@use 'mixin';
+/* ----- breakpoint ----- */
+// $breakpoint: 769px;
+// $sp: 414px;
+// $tablet: 768px;
+// $pc: 1200px;
+
+
+header {
+  // @include mixin.sp-tablet-pc($sp, $tablet, $pc);
+}
+
+div {
+  // @include mixin.breakpoint($breakpoint);
+}
+footer {
+}

@@ -1,0 +1,24 @@
+{
+  "siteInfo": {
+    "name": "mass-html-template",
+    "siteUrl": "localhost:8080"
+  },
+  "pages": {
+    "home": {
+      "name": "Home",
+      "description": "Home"
+    },
+    "cat": {
+      "name": "Cat",
+      "description": "Cat pages"
+    },
+    "dog": {
+      "name": "Dog",
+      "description": "Dog pages"
+    },
+    "bird": {
+      "name": "Bird",
+      "description": "Bird pages"
+    }
+  }
+}
