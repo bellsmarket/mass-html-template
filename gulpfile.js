@@ -24,8 +24,32 @@ var srcPath = {
   'css': 'src/**/*.css',
   'sass': 'src/sass/*.scss',
   'js': 'src/js/*.js',
-  'json': 'src/_data/',
+  'json': 'src/_data/site.json',
 };
+
+const option = {
+  ejs: {
+    src: ['src/ejs/**/*.ejs', '!' + 'src/ejs/**/_*.ejs'],
+    dist: './dist'
+  }
+};
+
+
+// const options = {
+//   css : {
+//     src : '**/css/**/*.scss',
+//     dist: './'
+//   },
+//
+//   sass : {
+//     //notifyのエラーを表示させるためfalseに
+//     errLogToConsole: false,
+//     //css圧縮
+//     // outputStyle: 'expanded'
+//     outputStyle: 'compressed'
+//   }
+// }
+
 
 // Output Directory
 var destPath = {
@@ -53,15 +77,19 @@ function html() {
     .pipe(connect.reload());
 }
 
+
+// ソースマップの下記の書き方を踏襲し移植予定
+// .src([options.css.src, '!node_modules/**'],{ sourcemaps: true })
+
 function styles() {
   return gulp.src(srcPath.sass)
     .pipe(sourcemaps.init())
     // .pipe(cached('sass'))
-    .pipe(scsslint({ 'maxBuffer': 10000 }) )
+    // .pipe(scsslint({ 'maxBuffer': 10000 }) )
     .pipe(plumber({
       errorHandler: notify.onError({
-        message: 'Error: <%= error.message %>',
-        title: 'styles'
+        title: 'scss Compile Failed', // 任意のタイトルを表示させる
+        message: '<%= error.message %>' // エラー内容を表示させる
       })
     }))
     .pipe(sass())
@@ -116,6 +144,8 @@ function checkJs() {
 
 
 function ejs() {
+  var json = JSON.parse(fs.readFileSync(srcPath.json));
+
   return gulp.src(srcPath.ejs)
     .pipe(changed('ejs'))
     .pipe(plumber({
@@ -124,7 +154,10 @@ function ejs() {
         title: 'ejs'
       })
     }))
-    .pipe(gulpejs({ title: 'gulp-ejs' }))
+    .pipe(gulpejs({
+      title: 'gulp-ejs',
+      jsonData: json
+     }))
     .pipe(
       htmlbeautify({
         indent_size: 2,
